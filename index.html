@@ -73,7 +73,7 @@ input,button,select{margin:5px;padding:8px;font-size:14px}
 <div id="clientes"></div>
 </div>
 
-<!-- 🔥 FIREBASE -->
+<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
@@ -90,10 +90,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-window.db = db;
-window.setDoc = setDoc;
-window.getDoc = getDoc;
-window.doc = doc;
+window.db=db;
+window.setDoc=setDoc;
+window.getDoc=getDoc;
+window.doc=doc;
 </script>
 
 <script>
@@ -108,21 +108,19 @@ async function guardarTodo(){
 
  if(window.db){
   await setDoc(doc(db,"tienda","datos"),{
-   inventario, ventas, clientes
+   inventario,ventas,clientes
   });
  }
 }
 
 async function cargarTodo(){
  if(window.db){
-  let docRef = doc(db,"tienda","datos");
-  let docSnap = await getDoc(docRef);
-
-  if(docSnap.exists()){
-   let data = docSnap.data();
-   inventario = data.inventario || [];
-   ventas = data.ventas || [];
-   clientes = data.clientes || [];
+  let snap=await getDoc(doc(db,"tienda","datos"));
+  if(snap.exists()){
+   let d=snap.data();
+   inventario=d.inventario||[];
+   ventas=d.ventas||[];
+   clientes=d.clientes||[];
   }
  }
 
@@ -132,10 +130,10 @@ async function cargarTodo(){
 }
 
 function agregarProducto(){
- let n=document.getElementById('nombre').value.toLowerCase();
- let p=parseFloat(document.getElementById('precio').value);
- let s=parseInt(document.getElementById('stock').value);
- let c=document.getElementById('categoria').value;
+ let n=nombre.value.toLowerCase();
+ let p=parseFloat(precio.value);
+ let s=parseInt(stock.value);
+ let c=categoria.value;
 
  if(!n||isNaN(p)||isNaN(s)) return alert("Faltan datos");
 
@@ -208,6 +206,7 @@ function actualizarVentas(){
   cont.appendChild(d);
  });
 
+ total.textContent;
  document.getElementById('total').textContent="Total: $"+total;
 }
 
@@ -221,7 +220,7 @@ function crearCliente(){
  let nombre=prompt("Nombre cliente");
  if(!nombre) return;
 
- clientes.push({nombre:nombre,lista:[]});
+ clientes.push({nombre,lista:[]});
  guardarTodo();
  renderClientes();
 }
