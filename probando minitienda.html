@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Tienda Pro Guardado</title>
+<style>
+body{font-family:Arial;background:#f4f4f4;margin:20px}
+h1{text-align:center}
+.section{background:white;padding:20px;margin:15px 0;border-radius:15px}
+input,button,select{margin:5px;padding:10px;font-size:15px}
+.producto{display:flex;gap:5px;margin:5px 0;align-items:center}
+.cliente{border:1px solid #ccc;padding:10px;margin-top:10px;border-radius:10px}
+.total{font-size:20px;font-weight:bold;margin-top:10px}
+</style>
+</head>
+<body>
+
+<h1>Mini Tienda</h1>
+
+<div class="section">
+<h2>Inventario</h2>
+
+<input id="nombre" placeholder="Producto">
+<input id="precio" type="number" placeholder="Precio">
+<input id="stock" type="number" placeholder="Cantidad">
+<select id="categoria">
+<option value="cerveza">🍺 Cerveza</option>
+<option value="panaderia">🍞 Panadería</option>
+<option value="galletas">🍪 Galletas</option>
+<option value="galguerias">🍬 Galguerías</option>
+<option value="jugos">🧃 Jugos</option>
+<option value="agua">💧 Agua</option>
+<option value="cereales">🥣 Cereales</option>
+<option value="papas">🥔 Papas</option>
+<option value="medicinas">💊 Medicinas</option>
+<option value="detergentes">🧼 Detergentes</option>
+<option value="papeleria">📒 Papelería</option>
+<option value="empanadas">🥟 Empanadas</option>
+<option value="helados">🍦 Helados</option>
+</select>
+
+<button onclick="agregarProducto()">Agregar</button>
+</div>
+
+<!-- CATEGORÍAS -->
+<div id="cerveza" class="section"><h3>🍺 Cerveza</h3></div>
+<div id="panaderia" class="section"><h3>🍞 Panadería</h3></div>
+<div id="galletas" class="section"><h3>🍪 Galletas</h3></div>
+<div id="galguerias" class="section"><h3>🍬 Galguerías</h3></div>
+<div id="jugos" class="section"><h3>🧃 Jugos</h3></div>
+<div id="agua" class="section"><h3>💧 Agua</h3></div>
+<div id="cereales" class="section"><h3>🥣 Cereales</h3></div>
+<div id="papas" class="section"><h3>🥔 Papas</h3></div>
+<div id="medicinas" class="section"><h3>💊 Medicinas</h3></div>
+<div id="detergentes" class="section"><h3>🧼 Detergentes</h3></div>
+<div id="papeleria" class="section"><h3>📒 Papelería</h3></div>
+<div id="empanadas" class="section"><h3>🥟 Empanadas</h3></div>
+<div id="helados" class="section"><h3>🍦 Helados</h3></div>
+
+<!-- VENTAS -->
+<div class="section">
+<h2>Ventas del día</h2>
+<div id="ventas"></div>
+<p id="total" class="total">Total: $0</p>
+</div>
+
+<!-- VENTAS RETRASADAS -->
+<div class="section">
+<h2>Ventas retrasadas</h2>
+<button onclick="crearCliente()">➕ Persona</button>
+<div id="clientes"></div>
+</div>
+
+<!-- 🔥 FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDoGtC6gpwi3hPkFn2FU5Zr5vL4a4GcdyQ",
+  authDomain: "minimarketpunto3-117ce.firebaseapp.com",
+  projectId: "minimarketpunto3-117ce",
+  storageBucket: "minimarketpunto3-117ce.firebasestorage.app",
+  messagingSenderId: "770945278500",
+  appId: "1:770945278500:web:28643ea68990bcebec2eb1"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.db = db;
+window.setDoc = setDoc;
+window.getDoc = getDoc;
+window.doc = doc;
+</script>
+
+<script>
+let inventario=[];
+let ventas=[];
+let clientes=[];
+
+async function guardarTodo(){
+ localStorage.setItem("inventario", JSON.stringify(inventario));
+ localStorage.setItem("ventas", JSON.stringify(ventas));
+ localStorage.setItem("clientes", JSON.stringify(clientes));
+
+ // 🔥 GUARDAR EN FIREBASE
+ if(window.db){
+  await setDoc(doc(db,"tienda","datos"),{
+   inventario, ventas, clientes
+  });
+ }
+}
+
+async function cargarTodo(){
+ // 🔥 INTENTA CARGAR DE FIREBASE
+ if(window.db){
+  let docRef = doc(db,"tienda","datos");
+  let docSnap = await getDoc(docRef);
+
+  if(docSnap.exists()){
+   let data = docSnap.data();
+   inventario = data.inventario || [];
+   ventas = data.ventas || [];
+   clientes = data.clientes || [];
+  }else{
+   inventario = JSON.parse(localStorage.getItem("inventario")) || [];
+   ventas = JSON.parse(localStorage.getItem("ventas")) || [];
+   clientes = JSON.parse(localStorage.getItem("clientes")) || [];
+  }
+ }else{
+  inventario = JSON.parse(localStorage.getItem("inventario")) || [];
+  ventas = JSON.parse(localStorage.getItem("ventas")) || [];
+  clientes = JSON.parse(localStorage.getItem("clientes")) || [];
+ }
+
+ renderInventario();
+ actualizarVentas();
+ renderClientes();
+}
+
+function agregarProducto(){
+ let n=document.getElementById('nombre').value.toLowerCase();
+ let p=parseFloat(document.getElementById('precio').value);
+ let s=parseInt(document.getElementById('stock').value);
+ let c=document.getElementById('categoria').value;
+
+ if(!n||isNaN(p)||isNaN(s)) return alert("Faltan datos");
+
+ inventario.push({nombre:n,precio:p,stock:s,categoria:c});
+ guardarTodo();
+ renderInventario();
+}
+
